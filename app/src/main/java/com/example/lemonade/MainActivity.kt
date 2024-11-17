@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2023 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.lemonade
 
 import android.os.Bundle
@@ -29,8 +13,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -51,11 +35,12 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.lemonade.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -70,9 +55,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LemonadeApp() {
-
     var currentStep by remember { mutableStateOf(1) }
-
     var squeezeCount by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -80,12 +63,13 @@ fun LemonadeApp() {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Lemonade",
-                        fontWeight = FontWeight.Bold
+                        text = stringResource(R.string.app_name),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge
                     )
                 },
                 colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
             )
         }
@@ -94,55 +78,43 @@ fun LemonadeApp() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.tertiaryContainer),
+                .background(MaterialTheme.colorScheme.primaryContainer),
             color = MaterialTheme.colorScheme.background
         ) {
-            when (currentStep) {
-                1 -> {
-                    LemonTextAndImage(
-                        textLabelResourceId = R.string.lemon_select,
-                        drawableResourceId = R.drawable.lemon_tree,
-                        contentDescriptionResourceId = R.string.lemon_tree_content_description,
-                        onImageClick = {
-                            currentStep = 2
-                            squeezeCount = (2..4).random()
-                        }
-                    )
-                }
-                2 -> {
-                    LemonTextAndImage(
-                        textLabelResourceId = R.string.lemon_squeeze,
-                        drawableResourceId = R.drawable.lemon_squeeze,
-                        contentDescriptionResourceId = R.string.lemon_content_description,
-                        onImageClick = {
-                            squeezeCount--
-                            if (squeezeCount == 0) {
-                                currentStep = 3
-                            }
-                        }
-                    )
-                }
 
-                3 -> {
-                    LemonTextAndImage(
-                        textLabelResourceId = R.string.lemon_drink,
-                        drawableResourceId = R.drawable.lemon_drink,
-                        contentDescriptionResourceId = R.string.lemonade_content_description,
-                        onImageClick = {
-                            currentStep = 4
-                        }
-                    )
-                }
-                4 -> {
-                    LemonTextAndImage(
-                        textLabelResourceId = R.string.lemon_empty_glass,
-                        drawableResourceId = R.drawable.lemon_restart,
-                        contentDescriptionResourceId = R.string.empty_glass_content_description,
-                        onImageClick = {
-                            currentStep = 1
-                        }
-                    )
-                }
+            val stepHandler: (Int) -> Unit = { currentStep = it }
+
+            when (currentStep) {
+                1 -> LemonTextAndImage(
+                    textLabelResourceId = R.string.lemon_select,
+                    drawableResourceId = R.drawable.lemon_tree,
+                    contentDescriptionResourceId = R.string.lemon_tree_content_description,
+                    onImageClick = {
+                        stepHandler(2)
+                        squeezeCount = (2..4).random()
+                    }
+                )
+                2 -> LemonTextAndImage(
+                    textLabelResourceId = R.string.lemon_squeeze,
+                    drawableResourceId = R.drawable.lemon_squeeze,
+                    contentDescriptionResourceId = R.string.lemon_content_description,
+                    onImageClick = {
+                        squeezeCount--
+                        if (squeezeCount == 0) stepHandler(3)
+                    }
+                )
+                3 -> LemonTextAndImage(
+                    textLabelResourceId = R.string.lemon_drink,
+                    drawableResourceId = R.drawable.lemon_drink,
+                    contentDescriptionResourceId = R.string.lemonade_content_description,
+                    onImageClick = { stepHandler(4) }
+                )
+                4 -> LemonTextAndImage(
+                    textLabelResourceId = R.string.lemon_empty_glass,
+                    drawableResourceId = R.drawable.lemon_restart,
+                    contentDescriptionResourceId = R.string.empty_glass_content_description,
+                    onImageClick = { stepHandler(1) }
+                )
             }
         }
     }
@@ -154,7 +126,7 @@ fun LemonTextAndImage(
     drawableResourceId: Int,
     contentDescriptionResourceId: Int,
     onImageClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.fillMaxSize()
 ) {
     Box(
         modifier = modifier
@@ -166,22 +138,24 @@ fun LemonTextAndImage(
         ) {
             Button(
                 onClick = onImageClick,
-                shape = RoundedCornerShape(dimensionResource(R.dimen.button_corner_radius)),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                modifier = Modifier.size(200.dp) // Circle button size
             ) {
                 Image(
                     painter = painterResource(drawableResourceId),
                     contentDescription = stringResource(contentDescriptionResourceId),
                     modifier = Modifier
-                        .width(dimensionResource(R.dimen.button_image_width))
-                        .height(dimensionResource(R.dimen.button_image_height))
-                        .padding(dimensionResource(R.dimen.button_interior_padding))
+                        .size(150.dp)
+                        .padding(8.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_vertical)))
+            Spacer(modifier = Modifier.height(100.dp))
             Text(
                 text = stringResource(textLabelResourceId),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 10.dp)
             )
         }
     }
@@ -190,7 +164,7 @@ fun LemonTextAndImage(
 @Preview
 @Composable
 fun LemonPreview() {
-    AppTheme() {
+    AppTheme {
         LemonadeApp()
     }
 }
